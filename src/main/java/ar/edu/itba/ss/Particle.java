@@ -20,10 +20,6 @@ public class Particle extends CIMParticle {
         return String.format(Locale.US,"%f %f %f %d\n", getActualR().getX(), getActualR().getY(), radius, color);
     }
 
-    public Vector2 getActualR() {
-        return getActualR();
-    }
-
 //    public void setCellCoords(int Mx, int My, double Lx, double Ly, double xOffset, double yOffset) {
 //        cellX = (int)Math.floor(((getActualR().getX() - xOffset) * Mx) / (Lx));
 //        cellY = (int)Math.floor(((getActualR().getY() - yOffset) * My) / (Ly));
