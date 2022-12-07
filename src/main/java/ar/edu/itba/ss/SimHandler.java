@@ -8,16 +8,26 @@ public class SimHandler {
     private final List<Particle> particles = new ArrayList<>();
     private final List<Food> food = new ArrayList<>();
 
-    private double step = 0.001, actualTime = 0, tf = 50;
+    private double step, actualTime = 0, tf = 50;
 
     private double L = 50;
+
+    // Particles characteristics
+    private double rMin = 0.5, rMax = 1, vd = 4, ve = vd;
 
     private CIM cim;
 
     public SimHandler() {
         generateWalls();
-        food.add(new Food(new Vector2(23, 23), 1));
+
+        food.add(new Food(new Vector2(23, 23), 0.25));
+        particles.add(new Particle(new Vector2(25, 25), new Vector2(0,0), 1, 1));
         cim = new CIM(particles, L, L);
+        step = calculateStep(rMin, rMax, vd);
+    }
+
+    private double calculateStep(double rMin, double vd, double ve) {
+        return rMin / (2 * Math.max(vd, ve));
     }
 
     private void generateWalls() {
@@ -30,8 +40,9 @@ public class SimHandler {
         walls.add(new Wall(new Vector2(L, L), new Vector2(0, L)));
     }
 
+
+
     public void iterate() {
-        boolean ballDrop = false;
         for(Particle p : particles) {
             List<Particle> neighbours = cim.calculateNeighbours(p);
 
