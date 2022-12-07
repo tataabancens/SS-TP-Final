@@ -6,12 +6,18 @@ import java.util.List;
 public class SimHandler {
     private final List<Wall> walls = new ArrayList<>();
     private final List<Particle> particles = new ArrayList<>();
+    private final List<Food> food = new ArrayList<>();
+
     private double step = 0.001, actualTime = 0, tf = 50;
 
     private double L = 50;
 
+    private CIM cim;
+
     public SimHandler() {
         generateWalls();
+        food.add(new Food(new Vector2(23, 23), 1));
+        cim = new CIM(particles, L, L);
     }
 
     private void generateWalls() {
@@ -27,8 +33,12 @@ public class SimHandler {
     public void iterate() {
         boolean ballDrop = false;
         for(Particle p : particles) {
-//            List<Particle> neighbours = cim.calculateNeighbours(p);
-//            cim.updateParticle(p);
+            List<Particle> neighbours = cim.calculateNeighbours(p);
+
+            // Aca van las reglas de actualizacion
+
+
+            cim.updateParticle(p);
         }
         actualTime += step;
     }
@@ -58,8 +68,16 @@ public class SimHandler {
         return sb.toString();
     }
 
+    public String printFood() {
+        StringBuilder sb = new StringBuilder();
+        for(Food f : food) {
+            sb.append(f.toXYZ());
+        }
+        return sb.toString();
+    }
+
     public String printSystem() {
-        return String.format("%d\n\n%s%s", particles.size() + wallsSize(), printParticles(), printWalls());
+        return String.format("%d\n\n%s%s%s", particles.size() + wallsSize() + food.size(), printParticles(), printWalls(), printFood());
     }
 
     public double getStep() {
