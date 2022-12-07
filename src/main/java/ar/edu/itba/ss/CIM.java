@@ -8,19 +8,23 @@ public class CIM {
     private int Mx = 1, My = 1;
     private float rc = 0;
 
-    private final List<List<Particle>> cells;
+    private final List<List<CIMParticle>> cells;
 
-    public CIM(List<Particle> particles, double Lx, double Ly) {
+    public CIM(List<Particle> particles, List<Food> food, double Lx, double Ly) {
         this.Lx = Lx + Math.abs(xOffset) * 2;
         this.Ly = Ly + Math.abs(yOffset) * 2;
         cells = new ArrayList<>(Mx * My);
-        calculateM(particles);
-        cellIndexMethodSetup(particles);
+
+        List<CIMParticle> cimParticles = new ArrayList<CIMParticle>(particles);
+        cimParticles.addAll(food);
+
+        calculateM(cimParticles);
+        cellIndexMethodSetup(cimParticles);
     }
 
-    public void calculateM(List<Particle> particles) {
+    public void calculateM(List<CIMParticle> particles) {
         double maxRadius = 0.0f;
-        for(Particle p : particles) {
+        for(CIMParticle p : particles) {
             if (p.getRadius() > maxRadius) {
                 maxRadius = p.getRadius();
             }
@@ -29,15 +33,15 @@ public class CIM {
         My = (int) Math.floor(Ly / (rc + 2 * maxRadius));
     }
 
-    public void cellIndexMethodSetup(List<Particle> particles) {
+    public void cellIndexMethodSetup(List<CIMParticle> particles) {
         for (int i = 0; i < Mx * My; i++) {
-            cells.add(new ArrayList<Particle>());
+            cells.add(new ArrayList<CIMParticle>());
         }
         storeInCells(particles);
     }
 
-    public void storeInCells(List<Particle> particles) {
-        for (Particle particle: particles) {
+    public void storeInCells(List<CIMParticle> particles) {
+        for (CIMParticle particle: particles) {
             // Calculates cell coordinates and stores them in particle
             particle.setCellCoords(Mx, My, Lx, Ly, xOffset, yOffset);
             int cellIndex = particle.getCellX() + particle.getCellY() * Mx;
@@ -51,14 +55,14 @@ public class CIM {
         }
     }
 
-    public void cellIndexUpdate(List<Particle> particles) {
+    public void cellIndexUpdate(List<CIMParticle> particles) {
         for (int i = 0; i < Mx * My; i++) {
             cells.get(i).clear();
         }
         storeInCells(particles);
     }
 
-    public void updateParticle(Particle p) {
+    public void updateParticle(CIMParticle p) {
         int previousIndex = p.getCellX() + p.getCellY() * Mx;
         cells.get(previousIndex).remove(p);
 
@@ -73,10 +77,10 @@ public class CIM {
         cells.get(cellIndex).add(p);
     }
 
-    public List<Particle> calculateNeighbours(Particle p) {
+    public List<CIMParticle> calculateNeighbours(Particle p) {
         // Sets an object with the corresponding xy indexes
         NeighbourCells nc = new NeighbourCells(p, Mx, My);
-        List<Particle> neighbours = new ArrayList<>();
+        List<CIMParticle> neighbours = new ArrayList<>();
         for (int i = nc.xStart; i < nc.xEnd; i++) {
             for (int j = nc.yStart; j < nc.yEnd; j++) {
                 int index = i + j * Mx;
@@ -91,7 +95,10 @@ public class CIM {
         return cellIndex >= 0 && cellIndex <= Mx + My * Mx;
     }
 
-
+    private static class Cell {
+        List<Particle> particles = new ArrayList<>();
+        List<Food> food = new ArrayList<>();
+    }
 
     private static class NeighbourCells {
         int xStart, xEnd, yStart, yEnd;

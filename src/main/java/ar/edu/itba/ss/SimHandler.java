@@ -22,7 +22,7 @@ public class SimHandler {
 
         food.add(new Food(new Vector2(23, 23), 0.25));
         particles.add(new Particle(new Vector2(25, 25), new Vector2(0,0), 1, 1));
-        cim = new CIM(particles, L, L);
+        cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
     }
 
@@ -44,11 +44,9 @@ public class SimHandler {
 
     public void iterate() {
         for(Particle p : particles) {
-            List<Particle> neighbours = cim.calculateNeighbours(p);
+            List<CIMParticle> neighbours = cim.calculateNeighbours(p);
 
             // Aca van las reglas de actualizacion
-
-
             cim.updateParticle(p);
         }
         actualTime += step;
