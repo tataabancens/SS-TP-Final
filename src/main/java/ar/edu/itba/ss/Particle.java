@@ -2,13 +2,18 @@ package ar.edu.itba.ss;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class Particle extends CIMParticle {
     private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
     private final double mass, rMin, rMax, tao, vdMax;
     private final int color = 0;
 
-    private boolean contact = false;
+    private boolean contact = false, resetedDirection = true;
+    private int foodCount = 0;
+
+    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1;
+
 
     private int cellX, cellY, cellIndex;
 
@@ -74,6 +79,7 @@ public class Particle extends CIMParticle {
     public void applyRadiiRule(double step) {
         if (contact) {
             setRadius(rMin);
+            resetedDirection = false;
         } else if (getRadius() < rMax) {
             double increment = rMax / (tao / step);
             double newRadii = getRadius() + increment;
@@ -94,11 +100,28 @@ public class Particle extends CIMParticle {
         }
         if (closerFood != null) {
             vd = closerFood.getActualR().substract(getActualR()).normalize();
-        } else if (contact) {
+            timeSinceChangedDirection = 0;
+        } else if (!resetedDirection) {
             // Aca redirigir para otro lado la criatura
+            Random random = new Random();
+            vd = new Vector2(-0.5 + random.nextDouble(), -0.5 + random.nextDouble()).normalize();
+            if (!contact) {
+                resetedDirection = true;
+            }
         } else {
-            // Aca mantener la direccion de la criatura
-            vd = actualV.normalize();
+            // Aca mantener la direccion de la criatura o cambiarla despues de cierta cantidad de tiempo
+            if (timeSinceChangedDirection > intervalBetweenChangeOfDirection) {
+                Random random = new Random();
+                if (random.nextInt(2) % 2 == 0) {
+                    vd = actualV.rotate(Math.PI/6);
+                } else {
+                    vd = actualV.rotate(-Math.PI/6);
+                }
+
+                timeSinceChangedDirection = 0;
+            } else {
+                vd = actualV.normalize();
+            }
         }
     }
 
@@ -112,6 +135,7 @@ public class Particle extends CIMParticle {
         actualV = getVelocity();
         setActualR(getActualR().sum(actualV.scalarProduct(step)));
         contact = false;
+        timeSinceChangedDirection += step;
     }
 
     private Vector2 getVelocity() {
@@ -120,5 +144,9 @@ public class Particle extends CIMParticle {
         } else {
             return vd;
         }
+    }
+
+    public void addFoodCount() {
+        foodCount++;
     }
 }

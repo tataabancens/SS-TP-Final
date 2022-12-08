@@ -2,6 +2,7 @@ package ar.edu.itba.ss;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class SimHandler {
     private final List<Wall> walls = new ArrayList<>();
@@ -10,7 +11,7 @@ public class SimHandler {
 
     private double step, actualTime = 0, tf = 50;
 
-    private double L = 50;
+    private double L = 35;
 
     // Particles characteristics
     private double rMin = 0.15, rMax = 0.32, vd = 4, ve = vd, tao = 0.5, beta = 1;
@@ -22,9 +23,10 @@ public class SimHandler {
     public SimHandler() {
         generateWalls();
 
-        food.add(new Food(new Vector2(23, 23), 0.25));
-        particles.add(new Particle(new Vector2(23, 25), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
-        particles.add(new Particle(new Vector2(22, 25), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
+        food.add(new Food(new Vector2(5, 10), 0.1));
+        food.add(new Food(new Vector2(10, 5), 0.1));
+        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(10, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
     }
@@ -41,6 +43,33 @@ public class SimHandler {
         walls.add(new Wall(new Vector2(L, 0), new Vector2(L, L)));
 
         walls.add(new Wall(new Vector2(L, L), new Vector2(0, L)));
+    }
+
+    public Vector2 generateNewLocation(double radius) {
+        Random r = new Random();
+        boolean ok = false;
+        Vector2 R = null;
+        while (!ok) {
+            boolean overlapped = false;
+            R = new Vector2(radius + r.nextDouble() * (L - radius * 2), radius + r.nextDouble() * (L - radius * 2));
+            for (Particle p : particles) {
+                if (R.distanceTo(p.getActualR()) < radius + p.getRadius()) {
+                    overlapped = true;
+                    break;
+                }
+            }
+            for (Food p : food) {
+                if (R.distanceTo(p.getActualR()) < radius + p.getRadius()) {
+                    overlapped = true;
+                    break;
+                }
+            }
+            if (overlapped) {
+                continue;
+            }
+            ok = true;
+        }
+        return R;
     }
 
     public void iterate() {
@@ -73,10 +102,24 @@ public class SimHandler {
             // Advance particles to the next position
             p.advanceParticlesPositions(step);
         }
+        List<Food> auxFood = new ArrayList<>(food);
+        for (Food f : auxFood) {
+            List<Particle> competitors = f.checkOverlaps(particles);
+            if (competitors.size() != 0) {
+                assignFoodToCompetitor(competitors);
+//                f.setActualR(generateNewLocation(f.getRadius()));
+                food.remove(f);
+            }
+        }
         actualTime += step;
         count++;
     }
 
+    private void assignFoodToCompetitor(List<Particle> competitors) {
+            Random random = new Random();
+            int competitorIndex = random.nextInt(competitors.size());
+            competitors.get(competitorIndex).addFoodCount();
+    }
 
 
     public void iterateCIMOn() {
