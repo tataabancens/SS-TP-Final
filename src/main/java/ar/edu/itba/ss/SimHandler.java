@@ -13,15 +13,17 @@ public class SimHandler {
     private double L = 50;
 
     // Particles characteristics
-    private double rMin = 0.5, rMax = 1, vd = 4, ve = vd;
+    private double rMin = 0.15, rMax = 0.32, vd = 4, ve = vd, tao = 0.5, beta = 1;
 
     private CIM cim;
+    private boolean cimIsOn = false;
 
     public SimHandler() {
         generateWalls();
 
         food.add(new Food(new Vector2(23, 23), 0.25));
-        particles.add(new Particle(new Vector2(25, 25), new Vector2(0,0), 1, 1));
+        particles.add(new Particle(new Vector2(25, 25), new Vector2(0,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(22, 25), new Vector2(0,0), 1, rMin, rMin, rMax, tao, 4));
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
     }
@@ -40,9 +42,39 @@ public class SimHandler {
         walls.add(new Wall(new Vector2(L, L), new Vector2(0, L)));
     }
 
-
-
     public void iterate() {
+        if (cimIsOn) {
+            iterateCIMOn();
+        } else {
+            iterateCIMOf();
+        }
+    }
+
+    public void iterateCIMOf() {
+        for (Particle p : particles) {
+            // Find contacts with particles and calculate Ve
+            p.calculateVe(particles, walls);
+        }
+        for (Particle p : particles) {
+            // Adjust radius according to the rule
+            p.applyRadiiRule(step);
+        }
+        for (Particle p : particles) {
+            // Compute direction and sense of vd
+            p.calculateVdDirection(food);
+            // Compute magnitude of vd depending on the radius
+            p.calculateVdMagnitude(beta);
+        }
+        for (Particle p : particles) {
+            // Advance particles to the next position
+            p.advanceParticlesPositions(step);
+        }
+        actualTime += step;
+    }
+
+
+
+    public void iterateCIMOn() {
         for(Particle p : particles) {
             List<CIMParticle> neighbours = cim.calculateNeighbours(p);
 

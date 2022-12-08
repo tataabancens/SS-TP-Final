@@ -32,4 +32,12 @@ public class CIMParticle {
     public double getRadius() {
         return radius;
     }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public void setActualR(Vector2 actualR) {
+        this.actualR = actualR;
+    }
 }
