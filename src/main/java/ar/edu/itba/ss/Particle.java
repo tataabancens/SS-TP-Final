@@ -30,7 +30,7 @@ public class Particle extends CIMParticle {
             if (overlap > 0) {
                 contact = true;
                 if (w.isColliding(this)) {
-                    Vector2 normalVersor = w.getNormalVersor(this);
+                    Vector2 normalVersor = w.getNormalVersor(this).scalarProduct(-1);
                     ve = ve.sum(normalVersor);
                 }
             }
@@ -98,6 +98,7 @@ public class Particle extends CIMParticle {
             // Aca redirigir para otro lado la criatura
         } else {
             // Aca mantener la direccion de la criatura
+            vd = actualV.normalize();
         }
     }
 
@@ -110,6 +111,7 @@ public class Particle extends CIMParticle {
     public void advanceParticlesPositions(double step) {
         actualV = getVelocity();
         setActualR(getActualR().sum(actualV.scalarProduct(step)));
+        contact = false;
     }
 
     private Vector2 getVelocity() {

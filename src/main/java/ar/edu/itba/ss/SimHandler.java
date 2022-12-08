@@ -17,13 +17,14 @@ public class SimHandler {
 
     private CIM cim;
     private boolean cimIsOn = false;
+    private int count = 0;
 
     public SimHandler() {
         generateWalls();
 
         food.add(new Food(new Vector2(23, 23), 0.25));
-        particles.add(new Particle(new Vector2(25, 25), new Vector2(0,0), 1, rMin, rMin, rMax, tao, 4));
-        particles.add(new Particle(new Vector2(22, 25), new Vector2(0,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(23, 25), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(22, 25), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
     }
@@ -51,6 +52,9 @@ public class SimHandler {
     }
 
     public void iterateCIMOf() {
+        if (count == 10) {
+            System.out.println();
+        }
         for (Particle p : particles) {
             // Find contacts with particles and calculate Ve
             p.calculateVe(particles, walls);
@@ -70,6 +74,7 @@ public class SimHandler {
             p.advanceParticlesPositions(step);
         }
         actualTime += step;
+        count++;
     }
 
 

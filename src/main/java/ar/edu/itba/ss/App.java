@@ -20,7 +20,7 @@ public class App
         double outerStep = 0.05, lastTime = sh.getActualTime();
         while(sh.getActualTime() < sh.getTf()) {
             sh.iterate();
-
+            
             if (sh.getActualTime() - lastTime > outerStep ) {
                 lastTime = sh.getActualTime();
                 writeToFile(pw, sh.printSystem());
