@@ -1,12 +1,13 @@
 package ar.edu.itba.ss;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
 public class Particle extends CIMParticle {
     private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
-    private final double mass, rMin, rMax, tao, vdMax;
+    private final double mass, rMin, rMax, tao, vdMax, sense = 6;
     private final int color = 0;
 
     private boolean contact = false, resetedDirection = true;
@@ -86,11 +87,22 @@ public class Particle extends CIMParticle {
             setRadius(newRadii);
         }
     }
+    public List<Food> lookForCloseFood(List<Food> food, double sense) {
+        List<Food> closeFood = new ArrayList<>();
+        for (Food f : food) {
+            if (f.getActualR().distSquared(getActualR()) < sense * sense) {
+                closeFood.add(f);
+            }
+        }
+        return closeFood;
+    }
 
     public void calculateVdDirection(List<Food> food) {
+        List<Food> closeFood = lookForCloseFood(food, sense);
         Food closerFood = null;
         double distanceToCloserFoodSquared = Double.POSITIVE_INFINITY;
-        for (Food f : food) {
+
+        for (Food f : closeFood) {
             double distanceToFoodSquared = f.getActualR().distSquared(getActualR());
 
             if (distanceToFoodSquared < distanceToCloserFoodSquared) {
