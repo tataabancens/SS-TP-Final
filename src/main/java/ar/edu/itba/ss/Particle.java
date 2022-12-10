@@ -7,7 +7,7 @@ public class Particle extends CIMParticle {
     private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 700;
     private int color = 0;
 
-    private boolean contact = false, resetedDirection = true;
+    private boolean contact = false, resetedDirection = true, isHome = false;
     private int foodCount = 1;
 
     private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0;
@@ -154,7 +154,15 @@ public class Particle extends CIMParticle {
                 return 1;
         };
         walls.sort(comparator);
-        return walls.get(0).getNormalVersor(this);
+        Wall closerWall = walls.get(0);
+        if (isHome) {
+            return new Vector2(0,0);
+        } else if (closerWall.distanceToPoint(this) < getRadius() * 2) {
+            isHome = true;
+            return new Vector2(0,0);
+        } else {
+            return closerWall.getNormalVersor(this);
+        }
     }
 
     public void calculateVdDirection(List<Food> food, List<Wall> walls) {
@@ -181,9 +189,10 @@ public class Particle extends CIMParticle {
         timeSinceChangedDirection += step;
 
         // Consume energy
-        double consume = (sense + 0.5 * (vdMax * vdMax)) * step;
-        currentEnergy -= consume;
-
+        if (!isHome) {
+            double consume = (sense + 0.5 * (vdMax * vdMax)) * step;
+            currentEnergy -= consume;
+        }
         if (isLowEnergy()) {
             this.color = 20;
         }
