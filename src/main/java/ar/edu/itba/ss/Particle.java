@@ -7,13 +7,13 @@ import java.util.Random;
 
 public class Particle extends CIMParticle {
     private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
-    private final double mass, rMin, rMax, tao, vdMax, sense = 6;
+    private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 700;
     private final int color = 0;
 
     private boolean contact = false, resetedDirection = true;
     private int foodCount = 0;
 
-    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1;
+    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0;
 
 
     private int cellX, cellY, cellIndex;
@@ -26,6 +26,7 @@ public class Particle extends CIMParticle {
         this.rMax = rMax;
         this.tao = tao;
         this.vdMax = vdMax;
+        currentEnergy = maxEnergy;
     }
 
     public void calculateVe(List<Particle> particles, List<Wall> walls) {
@@ -148,6 +149,10 @@ public class Particle extends CIMParticle {
         setActualR(getActualR().sum(actualV.scalarProduct(step)));
         contact = false;
         timeSinceChangedDirection += step;
+
+        // Consume energy
+        double consume = (sense + 0.5 * (vdMax * vdMax)) * step;
+        currentEnergy -= consume;
     }
 
     private Vector2 getVelocity() {
@@ -160,5 +165,9 @@ public class Particle extends CIMParticle {
 
     public void addFoodCount() {
         foodCount++;
+    }
+
+    public boolean hasEnergy() {
+        return currentEnergy > 0;
     }
 }

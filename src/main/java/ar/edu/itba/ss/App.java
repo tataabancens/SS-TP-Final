@@ -17,7 +17,7 @@ public class App
         SimHandler sh = new SimHandler();
 
         writeToFile(pw, sh.printSystem());
-        double outerStep = 0.05, lastTime = sh.getActualTime();
+        double outerStep = 0.2, lastTime = sh.getActualTime();
         while(sh.getActualTime() < sh.getTf()) {
             sh.iterate();
 

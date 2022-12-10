@@ -7,9 +7,10 @@ import java.util.Random;
 public class SimHandler {
     private final List<Wall> walls = new ArrayList<>();
     private final List<Particle> particles = new ArrayList<>();
+    private final List<Particle> deadParticles = new ArrayList<>();
     private final List<Food> food = new ArrayList<>();
 
-    private double step, actualTime = 0, tf = 50;
+    private double step, actualTime = 0, tf = 55;
 
     private double L = 35;
 
@@ -80,10 +81,23 @@ public class SimHandler {
         }
     }
 
+    public void checkParticlesEnergy() {
+        List<Particle> aux = new ArrayList<>(particles);
+        for (Particle p : aux) {
+            if (!p.hasEnergy()) {
+                deadParticles.add(p);
+                particles.remove(p);
+            }
+        }
+    }
+
     public void iterateCIMOf() {
         if (count == 10) {
             System.out.println();
         }
+        // Checks if a particle energy got depleted and removes it from the list
+        checkParticlesEnergy();
+
         for (Particle p : particles) {
             // Find contacts with particles and calculate Ve
             p.calculateVe(particles, walls);
