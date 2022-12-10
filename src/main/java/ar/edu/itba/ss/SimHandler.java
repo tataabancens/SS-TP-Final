@@ -24,10 +24,10 @@ public class SimHandler {
     public SimHandler() {
         generateWalls();
 
-        food.add(new Food(new Vector2(5, 10), 0.1));
-        food.add(new Food(new Vector2(10, 5), 0.1));
-        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
-        particles.add(new Particle(new Vector2(10, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
+//        food.add(new Food(new Vector2(5, 10), 0.1));
+//        food.add(new Food(new Vector2(10, 5), 0.1));
+//        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(9, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
     }
@@ -108,7 +108,7 @@ public class SimHandler {
         }
         for (Particle p : particles) {
             // Compute direction and sense of vd
-            p.calculateVdDirection(food);
+            p.calculateVdDirection(food, walls);
             // Compute magnitude of vd depending on the radius
             p.calculateVdMagnitude(beta);
         }

@@ -1,17 +1,14 @@
 package ar.edu.itba.ss;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
 
 public class Particle extends CIMParticle {
     private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
     private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 700;
-    private final int color = 0;
+    private int color = 0;
 
     private boolean contact = false, resetedDirection = true;
-    private int foodCount = 0;
+    private int foodCount = 1;
 
     private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0;
 
@@ -26,7 +23,7 @@ public class Particle extends CIMParticle {
         this.rMax = rMax;
         this.tao = tao;
         this.vdMax = vdMax;
-        currentEnergy = maxEnergy;
+        currentEnergy = maxEnergy * 0.15;
     }
 
     public void calculateVe(List<Particle> particles, List<Wall> walls) {
@@ -88,6 +85,7 @@ public class Particle extends CIMParticle {
             setRadius(newRadii);
         }
     }
+
     public List<Food> lookForCloseFood(List<Food> food, double sense) {
         List<Food> closeFood = new ArrayList<>();
         for (Food f : food) {
@@ -98,12 +96,10 @@ public class Particle extends CIMParticle {
         return closeFood;
     }
 
-    public void calculateVdDirection(List<Food> food) {
-        List<Food> closeFood = lookForCloseFood(food, sense);
-        Food closerFood = null;
+    private Food determineCloserFood(List<Food> food) {
         double distanceToCloserFoodSquared = Double.POSITIVE_INFINITY;
-
-        for (Food f : closeFood) {
+        Food closerFood = null;
+        for (Food f : food) {
             double distanceToFoodSquared = f.getActualR().distSquared(getActualR());
 
             if (distanceToFoodSquared < distanceToCloserFoodSquared) {
@@ -111,30 +107,64 @@ public class Particle extends CIMParticle {
                 closerFood = f;
             }
         }
+        return closerFood;
+    }
+
+    public Vector2 goGetFood(List<Food> food) {
+        List<Food> closeFood = lookForCloseFood(food, sense);
+        Food closerFood = determineCloserFood(closeFood);
+
         if (closerFood != null) {
-            vd = closerFood.getActualR().substract(getActualR()).normalize();
             timeSinceChangedDirection = 0;
+            return closerFood.getActualR().substract(getActualR()).normalize();
         } else if (!resetedDirection) {
             // Aca redirigir para otro lado la criatura
             Random random = new Random();
-            vd = new Vector2(-0.5 + random.nextDouble(), -0.5 + random.nextDouble()).normalize();
             if (!contact) {
                 resetedDirection = true;
             }
+            return new Vector2(-0.5 + random.nextDouble(), -0.5 + random.nextDouble()).normalize();
         } else {
             // Aca mantener la direccion de la criatura o cambiarla despues de cierta cantidad de tiempo
             if (timeSinceChangedDirection > intervalBetweenChangeOfDirection) {
-                Random random = new Random();
-                if (random.nextInt(2) % 2 == 0) {
-                    vd = actualV.rotate(Math.PI/6);
-                } else {
-                    vd = actualV.rotate(-Math.PI/6);
-                }
-
                 timeSinceChangedDirection = 0;
+                return wander(actualV);
             } else {
-                vd = actualV.normalize();
+                return actualV.normalize();
             }
+        }
+    }
+
+    private Vector2 wander(Vector2 actualV) {
+        Random random = new Random();
+        if (random.nextInt(2) % 2 == 0) {
+            return actualV.rotate(Math.PI/6);
+        } else {
+            return actualV.rotate(-Math.PI/6);
+        }
+    }
+
+    private Vector2 goHome(List<Wall> walls) {
+        Comparator<Wall> comparator = (w1, w2) -> {
+            if (w1.distanceToPoint(this) < w2.distanceToPoint(this))
+                return -1;
+            else if (w1.distanceToPoint(this) == w2.distanceToPoint(this))
+                return 0;
+            else
+                return 1;
+        };
+        walls.sort(comparator);
+        return walls.get(0).getNormalVersor(this);
+    }
+
+    public void calculateVdDirection(List<Food> food, List<Wall> walls) {
+        if (isHungry()) {
+            vd = goGetFood(food);
+            return;
+        } else if (gotTwoFood() || isLowEnergy()) {
+            vd = goHome(walls);
+        } else if (!gotTwoFood()) {
+            vd = goGetFood(food);
         }
     }
 
@@ -153,6 +183,10 @@ public class Particle extends CIMParticle {
         // Consume energy
         double consume = (sense + 0.5 * (vdMax * vdMax)) * step;
         currentEnergy -= consume;
+
+        if (isLowEnergy()) {
+            this.color = 20;
+        }
     }
 
     private Vector2 getVelocity() {
@@ -169,5 +203,14 @@ public class Particle extends CIMParticle {
 
     public boolean hasEnergy() {
         return currentEnergy > 0;
+    }
+    public boolean isLowEnergy() {
+        return maxEnergy * 0.15 > currentEnergy;
+    }
+    public boolean isHungry() {
+        return foodCount == 0;
+    }
+    public boolean gotTwoFood() {
+        return foodCount == 2;
     }
 }
