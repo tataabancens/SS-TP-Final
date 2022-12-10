@@ -8,7 +8,7 @@ public class Particle extends CIMParticle {
     private int color = 0;
 
     private boolean contact = false, resetedDirection = true, isHome = false;
-    private int foodCount = 1;
+    private int foodCount = 0;
 
     private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0;
 
@@ -23,7 +23,7 @@ public class Particle extends CIMParticle {
         this.rMax = rMax;
         this.tao = tao;
         this.vdMax = vdMax;
-        currentEnergy = maxEnergy * 0.15;
+        currentEnergy = maxEnergy;
     }
 
     public void calculateVe(List<Particle> particles, List<Wall> walls) {
@@ -194,7 +194,7 @@ public class Particle extends CIMParticle {
             currentEnergy -= consume;
         }
         if (isLowEnergy()) {
-            this.color = 20;
+            this.color = 40;
         }
     }
 
@@ -220,6 +220,6 @@ public class Particle extends CIMParticle {
         return foodCount == 0;
     }
     public boolean gotTwoFood() {
-        return foodCount == 2;
+        return foodCount >= 2;
     }
 }

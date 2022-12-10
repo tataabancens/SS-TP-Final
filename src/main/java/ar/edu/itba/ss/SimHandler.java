@@ -20,10 +20,12 @@ public class SimHandler {
     private CIM cim;
     private boolean cimIsOn = false;
     private int count = 0;
+    private int foodAmount = 30;
+    private double foodRadius = 0.1;
 
     public SimHandler() {
         generateWalls();
-
+        generateFoodParticles(foodRadius);
 //        food.add(new Food(new Vector2(5, 10), 0.1));
 //        food.add(new Food(new Vector2(10, 5), 0.1));
 //        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
@@ -44,6 +46,25 @@ public class SimHandler {
         walls.add(new Wall(new Vector2(L, 0), new Vector2(L, L)));
 
         walls.add(new Wall(new Vector2(L, L), new Vector2(0, L)));
+    }
+
+    public void generateFoodParticles(double radius) {
+        Random r = new Random();
+        for (int i = 0; i < foodAmount;) {
+            Vector2 R = new Vector2(radius + r.nextDouble() * (L - radius * 2), radius + r.nextDouble() * (L - radius * 2));
+            boolean ok = true;
+            for (Food p : food) {
+                if (R.distanceTo(p.getActualR()) < radius + p.getRadius()) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) {
+                continue;
+            }
+            food.add(new Food(R, radius));
+            i++;
+        }
     }
 
     public Vector2 generateNewLocation(double radius) {
