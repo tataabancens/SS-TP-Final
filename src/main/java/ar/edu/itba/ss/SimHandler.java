@@ -20,12 +20,12 @@ public class SimHandler {
     private CIM cim;
     private boolean cimIsOn = false;
     private int count = 0;
-    private int foodAmount = 10, initialCreaturesAmount = 30;
+    private int foodAmount = 10, initialCreaturesAmount = 30, daysElapsed = 0, endDay;
     private double foodRadius = 0.1;
 
-    public SimHandler() {
+    public SimHandler(int endDay) {
+        this.endDay = endDay;
         generateWalls();
-        generateFoodParticles(foodRadius);
         generateParticles(rMin, walls);
 
         cim = new CIM(particles, food, L, L);
@@ -93,10 +93,10 @@ public class SimHandler {
         walls.add(new Wall(new Vector2(L, L), new Vector2(0, L)));
     }
 
-    public void generateFoodParticles(double radius) {
-        Random r = new Random(0);
+    public void generateFoodParticles(double radius, int daysElapsed) {
+        Random r = new Random(daysElapsed);
         for (int i = 0; i < foodAmount;) {
-            Vector2 R = new Vector2(L/4 + r.nextDouble() * (3 * L/4 - L/4), L/4 + r.nextDouble() * (3 * L / 4 - L/4));
+            Vector2 R = new Vector2(L/8 + r.nextDouble() * (7 * L/8 - L/8), L/8 + r.nextDouble() * (7 * L / 8 - L/8));
             boolean ok = true;
             for (Food p : food) {
                 if (R.distanceTo(p.getActualR()) < radius + p.getRadius()) {
@@ -273,6 +273,34 @@ public class SimHandler {
 
     public double getTf() {
         return tf;
+    }
+
+    public boolean generalEndCondition() {
+        return daysElapsed == endDay;
+    }
+
+    public boolean dayFinished() {
+        return particlesGotHome() && deadParticles.size() == 0;
+    }
+
+    public boolean particlesGotHome() {
+        for (Particle p : particles) {
+            if (!p.isHome()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void initDay() {
+        for (Particle p : particles) {
+            p.initDay();
+        }
+        generateFoodParticles(foodRadius, daysElapsed);
+    }
+
+    public void concludeDay() {
+        daysElapsed++;
     }
 }
 

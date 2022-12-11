@@ -19,11 +19,14 @@ public class Food extends CIMParticle{
         List<Particle> competitors = new ArrayList<>();
         // Check overlap with particles, if overlapped calculate force
         for (Particle p : particles) {
+            if (!p.gotTwoFood()) {
                 double overlap = calculateOverlap(p);
                 if (overlap > 0) {
                     competitors.add(p);
                 }
+            }
         }
+
         return competitors;
     }
 

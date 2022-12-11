@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Particle extends CIMParticle {
     private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
-    private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 700;
+    private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 300;
     private int color = 0;
 
     private boolean contact = false, resetedDirection = true, isHome = false;
@@ -24,6 +24,16 @@ public class Particle extends CIMParticle {
         this.tao = tao;
         this.vdMax = vdMax;
         currentEnergy = maxEnergy;
+    }
+
+    public void initDay() {
+        contact = false;
+        resetedDirection = false;
+        isHome = false;
+        foodCount = 0;
+        timeSinceChangedDirection = 0;
+        currentEnergy = maxEnergy;
+        color = 0;
     }
 
     public void calculateVe(List<Particle> particles, List<Wall> walls) {
@@ -225,6 +235,10 @@ public class Particle extends CIMParticle {
 
     public void setColor(int color) {
         this.color = color;
+    }
+
+    public boolean isHome() {
+        return isHome;
     }
 
     public CreatureStatus getStatus() {
