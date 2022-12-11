@@ -54,8 +54,20 @@ public class Wall {
         }
     }
 
+    public Vector2 getTangVector() {
+        return endPoint.substract(startPoint);
+    }
+
     public boolean isColliding(Particle p) {
         double segmentDist = startPoint.distanceTo(endPoint) + p.getRadius(); // Could be buggy
         return startPoint.distanceTo(p.getActualR()) < segmentDist && endPoint.distanceTo(p.getActualR()) < segmentDist;
+    }
+
+    public Vector2 getMiddlePoint() {
+        return startPoint.sum(endPoint).scalarProduct(0.5);
+    }
+
+    public Vector2 getStartPoint() {
+        return startPoint;
     }
 }

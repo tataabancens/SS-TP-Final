@@ -20,18 +20,63 @@ public class SimHandler {
     private CIM cim;
     private boolean cimIsOn = false;
     private int count = 0;
-    private int foodAmount = 30;
+    private int foodAmount = 10, initialCreaturesAmount = 30;
     private double foodRadius = 0.1;
 
     public SimHandler() {
         generateWalls();
         generateFoodParticles(foodRadius);
-//        food.add(new Food(new Vector2(5, 10), 0.1));
-//        food.add(new Food(new Vector2(10, 5), 0.1));
-//        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
-        particles.add(new Particle(new Vector2(9, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
+        generateParticles(rMin, walls);
+
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
+        System.out.println("Started");
+    }
+
+    private void generateDummyStuff() {
+        food.add(new Food(new Vector2(5, 10), 0.1));
+        food.add(new Food(new Vector2(10, 5), 0.1));
+        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
+        particles.add(new Particle(new Vector2(9, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
+    }
+
+    private void generateParticles(double rMin, List<Wall> walls) {
+        Random random = new Random(0);
+        for (int i = 0; i < initialCreaturesAmount;) {
+            int wallIndex = random.nextInt(walls.size());
+            Wall wall = walls.get(wallIndex);
+
+            Vector2 tangVectorToWall = wall.getTangVector();
+            double wallLength = tangVectorToWall.module();
+            Vector2 wallVersor = tangVectorToWall.normalize();
+
+            double distanceFromStartPoint = rMin + random.nextDouble() * (wallLength - rMin * 2);
+            Vector2 aux = wallVersor.scalarProduct(distanceFromStartPoint);
+            Vector2 R = wall.getStartPoint().sum(aux);
+
+            Vector2 normalVersor = wallVersor.getOrthogonal();
+            Vector2 aux2 = normalVersor.scalarProduct(rMin * 4);
+            R = R.sum(aux2);
+
+            boolean ok = true;
+            for (Food f : food) {
+                if (R.distanceTo(f.getActualR()) < rMin + f.getRadius()) {
+                    ok = false;
+                    break;
+                }
+            }
+            for (Particle p : particles) {
+                if (R.distanceTo(p.getActualR()) < rMin + p.getRadius()) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (!ok) {
+                continue;
+            }
+            particles.add(new Particle(R, normalVersor, 1, rMin, rMin, rMax, tao, 4));
+            i++;
+        }
     }
 
     private double calculateStep(double rMin, double vd, double ve) {
@@ -49,9 +94,9 @@ public class SimHandler {
     }
 
     public void generateFoodParticles(double radius) {
-        Random r = new Random();
+        Random r = new Random(0);
         for (int i = 0; i < foodAmount;) {
-            Vector2 R = new Vector2(radius + r.nextDouble() * (L - radius * 2), radius + r.nextDouble() * (L - radius * 2));
+            Vector2 R = new Vector2(L/4 + r.nextDouble() * (3 * L/4 - L/4), L/4 + r.nextDouble() * (3 * L / 4 - L/4));
             boolean ok = true;
             for (Food p : food) {
                 if (R.distanceTo(p.getActualR()) < radius + p.getRadius()) {
@@ -68,7 +113,7 @@ public class SimHandler {
     }
 
     public Vector2 generateNewLocation(double radius) {
-        Random r = new Random();
+        Random r = new Random(0);
         boolean ok = false;
         Vector2 R = null;
         while (!ok) {
@@ -106,6 +151,7 @@ public class SimHandler {
         List<Particle> aux = new ArrayList<>(particles);
         for (Particle p : aux) {
             if (!p.hasEnergy()) {
+                p.setColor(70);
                 deadParticles.add(p);
                 particles.remove(p);
             }
@@ -118,6 +164,8 @@ public class SimHandler {
         }
         // Checks if a particle energy got depleted and removes it from the list
         checkParticlesEnergy();
+
+        updateDeadParticles();
 
         for (Particle p : particles) {
             // Find contacts with particles and calculate Ve
@@ -150,6 +198,16 @@ public class SimHandler {
         count++;
     }
 
+    private void updateDeadParticles() {
+        List<Particle> aux = new ArrayList<>(deadParticles);
+        for(Particle p : aux) {
+            p.addDeadTimer(step);
+            if (p.getTimeSinceDeath() > 3) {
+                deadParticles.remove(p);
+            }
+        }
+    }
+
     private void assignFoodToCompetitor(List<Particle> competitors) {
             Random random = new Random();
             int competitorIndex = random.nextInt(competitors.size());
@@ -168,7 +226,7 @@ public class SimHandler {
     }
 
 
-    public String printParticles() {
+    public String printParticles(List<Particle> particles) {
         StringBuilder sb = new StringBuilder();
         for(Particle p : particles) {
             sb.append(p.toXYZ());
@@ -201,7 +259,8 @@ public class SimHandler {
     }
 
     public String printSystem() {
-        return String.format("%d\n\n%s%s%s", particles.size() + wallsSize() + food.size(), printParticles(), printWalls(), printFood());
+        return String.format("%d\n\n%s%s%s%s", particles.size() + wallsSize() + food.size() + deadParticles.size(),
+                printParticles(particles), printWalls(), printFood(), printParticles(deadParticles));
     }
 
     public double getStep() {
@@ -216,3 +275,4 @@ public class SimHandler {
         return tf;
     }
 }
+

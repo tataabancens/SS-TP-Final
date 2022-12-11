@@ -10,8 +10,8 @@ public class Particle extends CIMParticle {
     private boolean contact = false, resetedDirection = true, isHome = false;
     private int foodCount = 0;
 
-    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0;
-
+    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0, timeSinceDeath = 0;
+    private CreatureStatus status = CreatureStatus.ALIVE;
 
     private int cellX, cellY, cellIndex;
 
@@ -221,5 +221,25 @@ public class Particle extends CIMParticle {
     }
     public boolean gotTwoFood() {
         return foodCount >= 2;
+    }
+
+    public void setColor(int color) {
+        this.color = color;
+    }
+
+    public CreatureStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(CreatureStatus status) {
+        this.status = status;
+    }
+
+    public void addDeadTimer(double step) {
+        timeSinceDeath += step;
+    }
+
+    public double getTimeSinceDeath() {
+        return timeSinceDeath;
     }
 }
