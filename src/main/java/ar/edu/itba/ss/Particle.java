@@ -3,19 +3,19 @@ package ar.edu.itba.ss;
 import java.util.*;
 
 public class Particle extends CIMParticle {
-    private Vector2 lastR = new Vector2(0,0), actualV, ve, vd;
-    private final double mass, rMin, rMax, tao, vdMax, sense = 6, maxEnergy = 300;
+    private Vector2 lastR = new Vector2(0, 0), actualV, ve, vd;
+    private final double mass, rMin, rMax, tao, vdMax, maxEnergy = 500;
     private int color = 0;
 
     private boolean contact = false, resetedDirection = true, isHome = false;
     private int foodCount = 0;
 
-    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0, timeSinceDeath = 0;
+    private double timeSinceChangedDirection = 0, intervalBetweenChangeOfDirection = 1, currentEnergy = 0, timeSinceDeath = 0, sense;
     private CreatureStatus status = CreatureStatus.ALIVE;
 
     private int cellX, cellY, cellIndex;
 
-    public Particle(Vector2 actualR, Vector2 actualV, double mass, double radius, double rMin, double rMax, double tao, double vdMax) {
+    public Particle(Vector2 actualR, Vector2 actualV, double mass, double radius, double rMin, double rMax, double tao, double vdMax, double sense) {
         super(actualR, radius);
         this.actualV = actualV;
         this.mass = mass;
@@ -23,6 +23,7 @@ public class Particle extends CIMParticle {
         this.rMax = rMax;
         this.tao = tao;
         this.vdMax = vdMax;
+        this.sense = sense;
         currentEnergy = maxEnergy;
     }
 
@@ -37,7 +38,7 @@ public class Particle extends CIMParticle {
     }
 
     public void calculateVe(List<Particle> particles, List<Wall> walls) {
-        ve = new Vector2(0,0);
+        ve = new Vector2(0, 0);
         // Check overlap with walls, if overlapped calculate force
         for (Wall w : walls) {
             double overlap = calculateOverlap(w);
@@ -74,7 +75,7 @@ public class Particle extends CIMParticle {
     }
 
     public String toXYZ() {
-        return String.format(Locale.US,"%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius(), color);
+        return String.format(Locale.US, "%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius(), color);
     }
 
     public int getCellIndex() {
@@ -148,13 +149,25 @@ public class Particle extends CIMParticle {
     private Vector2 wander(Vector2 actualV) {
         Random random = new Random();
         if (random.nextInt(2) % 2 == 0) {
-            return actualV.rotate(Math.PI/6);
+            return actualV.rotate(Math.PI / 6);
         } else {
-            return actualV.rotate(-Math.PI/6);
+            return actualV.rotate(-Math.PI / 6);
         }
     }
 
     private Vector2 goHome(List<Wall> walls) {
+        Wall closerWall = determineCloserWall(walls);
+        if (isHome) {
+            return new Vector2(0, 0);
+        } else if (closerWall.distanceToPoint(this) < getRadius() * 2) {
+            isHome = true;
+            return new Vector2(0, 0);
+        } else {
+            return closerWall.getNormalVersor(this);
+        }
+    }
+
+    private Wall determineCloserWall(List<Wall> walls) {
         Comparator<Wall> comparator = (w1, w2) -> {
             if (w1.distanceToPoint(this) < w2.distanceToPoint(this))
                 return -1;
@@ -164,15 +177,7 @@ public class Particle extends CIMParticle {
                 return 1;
         };
         walls.sort(comparator);
-        Wall closerWall = walls.get(0);
-        if (isHome) {
-            return new Vector2(0,0);
-        } else if (closerWall.distanceToPoint(this) < getRadius() * 2) {
-            isHome = true;
-            return new Vector2(0,0);
-        } else {
-            return closerWall.getNormalVersor(this);
-        }
+        return walls.get(0);
     }
 
     public void calculateVdDirection(List<Food> food, List<Wall> walls) {
@@ -223,12 +228,15 @@ public class Particle extends CIMParticle {
     public boolean hasEnergy() {
         return currentEnergy > 0;
     }
+
     public boolean isLowEnergy() {
-        return maxEnergy * 0.15 > currentEnergy;
+        return maxEnergy * 0.5 > currentEnergy;
     }
+
     public boolean isHungry() {
         return foodCount == 0;
     }
+
     public boolean gotTwoFood() {
         return foodCount >= 2;
     }
@@ -255,5 +263,14 @@ public class Particle extends CIMParticle {
 
     public double getTimeSinceDeath() {
         return timeSinceDeath;
+    }
+
+    public Particle reproduce(List<Wall> walls) {
+        Wall closerWall = determineCloserWall(walls);
+        Vector2 wallVersor = closerWall.getTangVector().normalize();
+
+        Vector2 R = getActualR().sum(wallVersor.scalarProduct(radius * 2));
+
+        return new Particle(R, actualV.clone(), 1, rMin, rMin, rMax, tao, vdMax, sense);
     }
 }

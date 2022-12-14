@@ -12,36 +12,41 @@ public class SimHandler {
 
     private double step, actualTime = 0, tf = 55;
 
-    private double L = 35;
+    private double L = 80;
 
     // Particles characteristics
-    private double rMin = 0.15, rMax = 0.32, vd = 4, ve = vd, tao = 0.5, beta = 1;
+    private double rMin = 0.15, rMax = 0.32, vd, ve, tao = 0.5, beta = 1, sense;
 
     private CIM cim;
     private boolean cimIsOn = false;
     private int count = 0;
     private int foodAmount = 10, initialCreaturesAmount = 30, daysElapsed = 0, endDay;
+    private int bornCreaturesCount = 0, deadCreaturesCount = 0;
     private double foodRadius = 0.1;
 
-    public SimHandler(int endDay) {
+    public SimHandler(int endDay, int foodAmount, int initialCreaturesAmount, double vdMax, double sense) {
+        this.vd = vdMax;
+        this.sense = sense;
+        ve = vd;
         this.endDay = endDay;
+        this.foodAmount = foodAmount;
+        this.initialCreaturesAmount = initialCreaturesAmount;
         generateWalls();
         generateParticles(rMin, walls);
-
         cim = new CIM(particles, food, L, L);
         step = calculateStep(rMin, rMax, vd);
         System.out.println("Started");
     }
 
     private void generateDummyStuff() {
-        food.add(new Food(new Vector2(5, 10), 0.1));
-        food.add(new Food(new Vector2(10, 5), 0.1));
-        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, 4));
-        particles.add(new Particle(new Vector2(9, 10), new Vector2(1,0), 1, rMin, rMin, rMax, tao, 4));
+//        food.add(new Food(new Vector2(5, 10), 0.1));
+//        food.add(new Food(new Vector2(10, 5), 0.1));
+//        particles.add(new Particle(new Vector2(15, 15), new Vector2(-1,0), 1, rMin, rMin, rMax, tao, vd, sense));
+        particles.add(new Particle(new Vector2(rMax, rMax), new Vector2(1,0), 1, rMin, rMin, rMax, tao, vd, sense));
     }
 
     private void generateParticles(double rMin, List<Wall> walls) {
-        Random random = new Random(0);
+        Random random = new Random();
         for (int i = 0; i < initialCreaturesAmount;) {
             int wallIndex = random.nextInt(walls.size());
             Wall wall = walls.get(wallIndex);
@@ -74,7 +79,7 @@ public class SimHandler {
             if (!ok) {
                 continue;
             }
-            particles.add(new Particle(R, normalVersor, 1, rMin, rMin, rMax, tao, 4));
+            particles.add(new Particle(R, normalVersor, 1, rMin, rMin, rMax, tao, vd, sense));
             i++;
         }
     }
@@ -94,7 +99,7 @@ public class SimHandler {
     }
 
     public void generateFoodParticles(double radius, int daysElapsed) {
-        Random r = new Random(daysElapsed);
+        Random r = new Random();
         for (int i = 0; i < foodAmount;) {
             Vector2 R = new Vector2(L/8 + r.nextDouble() * (7 * L/8 - L/8), L/8 + r.nextDouble() * (7 * L / 8 - L/8));
             boolean ok = true;
@@ -293,6 +298,7 @@ public class SimHandler {
     }
 
     public void initDay() {
+
         for (Particle p : particles) {
             p.initDay();
         }
@@ -301,6 +307,23 @@ public class SimHandler {
 
     public void concludeDay() {
         daysElapsed++;
+
+        List<Particle> aux = new ArrayList<>(particles);
+        for (Particle p : aux) {
+            if (p.gotTwoFood()) {
+                Particle newP = p.reproduce(walls);
+                particles.add(newP);
+            }
+        }
+        food.clear();
+    }
+
+    public int getCreaturesAmount() {
+        return particles.size();
+    }
+
+    public int getDaysElapsed() {
+        return daysElapsed;
     }
 }
 
