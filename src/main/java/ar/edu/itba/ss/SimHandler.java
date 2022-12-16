@@ -164,12 +164,8 @@ public class SimHandler {
     }
 
     public void iterateCIMOf() {
-        if (count == 10) {
-            System.out.println();
-        }
         // Checks if a particle energy got depleted and removes it from the list
         checkParticlesEnergy();
-
         updateDeadParticles();
 
         for (Particle p : particles) {
@@ -281,7 +277,7 @@ public class SimHandler {
     }
 
     public boolean generalEndCondition() {
-        return daysElapsed == endDay;
+        return daysElapsed == endDay || getCreaturesAmount() == 0;
     }
 
     public boolean dayFinished() {

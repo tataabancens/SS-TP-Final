@@ -75,7 +75,7 @@ public class Particle extends CIMParticle {
     }
 
     public String toXYZ() {
-        return String.format(Locale.US, "%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius(), color);
+        return String.format(Locale.US, "%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius() * 2, color);
     }
 
     public int getCellIndex() {

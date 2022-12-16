@@ -12,7 +12,7 @@ public class Food extends CIMParticle{
     }
 
     public String toXYZ() {
-        return String.format(Locale.US,"%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius(), color);
+        return String.format(Locale.US,"%f %f %f %d\n", getActualR().getX(), getActualR().getY(), getRadius() * 3, color);
     }
 
     public List<Particle> checkOverlaps(List<Particle> particles) {
